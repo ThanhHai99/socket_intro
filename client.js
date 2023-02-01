@@ -10,6 +10,6 @@ const ws = new WebSocket('ws://localhost:3000')
 //     ws.send('something');
 // });
 
-ws.on('message', data => {
-    console.log('broadcast time: %s', data);
+ws.on('message', time => {
+    console.log('broadcast receiver: %s', time);
 });
