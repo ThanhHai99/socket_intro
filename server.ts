@@ -36,10 +36,20 @@ webSocketServer.on('connection', (ws) => {
   }
   sockets.push(thisWS)
 })
+webSocketServer.on('close', (ws) => {
+  sockets.forEach((socket) => {
+    if (socket.websocket == ws) {
+      const idx = sockets.indexOf(ws)
+      sockets.splice(idx, 1)
+    }
+  })
+})
 
 setInterval(() => {
   sendBroadcast()
-}, 1000)
+  console.log('sockets.length')
+  console.log(sockets.length)
+}, 2000)
 
 const sendBroadcast = () => {
   sockets.forEach((socket) => {
@@ -47,7 +57,17 @@ const sendBroadcast = () => {
     if (socket.websocket) {
       socket.websocket.send(currentTime)
     } else {
-      socket.socket.write(Buffer.from(currentTime.toString() + '\n', 'utf-8'), 'utf-8')
+      if (!socket.socket.isPaused()) {
+        socket.socket.write(Buffer.from(currentTime.toString() + '\n', 'utf-8'), 'utf-8')
+      } else {
+        // console.log('mat connect')
+        // sockets.forEach((socket) => {
+        //   if (socket.socket == socket) {
+        //     const idx = sockets.indexOf(socket)
+        //     sockets.splice(idx, 1)
+        //   }
+        // })
+      }
     }
     console.log(`Send broadcast ${currentTime}`)
   })
