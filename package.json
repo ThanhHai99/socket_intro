@@ -1,0 +1,21 @@
+{
+	"name": "socket_intro",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server.js",
+		"server": "node server.js",
+		"client": "node client.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"ws": "^8.12.0"
+	},
+	"devDependencies": {
+		"@types/ws": "^8.5.4"
+	}
+}
