@@ -21,7 +21,6 @@ socketServer.listen(ssPort, () => {
 socketServer.on('connection', (rs) => {
   const thisRS: SocketDto = {
     socket: rs,
-    isWebsocket: false,
   }
   sockets.push(thisRS)
 })
@@ -32,11 +31,10 @@ webSocketServer.once('listening', () => {
   console.log(`Web socket server listening at ${wssPort}`)
 })
 webSocketServer.on('connection', (ws) => {
-  // const thisWS: SocketDto = {
-  //   socket: ws,
-  //   isWebsocket: true,
-  // }
-  // sockets.push(thisWS)
+  const thisWS: SocketDto = {
+    websocket: ws,
+  }
+  sockets.push(thisWS)
 })
 
 setInterval(() => {
@@ -45,11 +43,9 @@ setInterval(() => {
 
 const sendBroadcast = () => {
   sockets.forEach((socket) => {
-    console.log('socket.length')
-    console.log(sockets.length)
     const currentTime = new Date()
-    if (socket.isWebsocket) {
-      socket.socket.send(currentTime)
+    if (socket.websocket) {
+      socket.websocket.send(currentTime)
     } else {
       socket.socket.write(Buffer.from(currentTime.toString() + '\n', 'utf-8'), 'utf-8')
     }
