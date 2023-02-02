@@ -4,6 +4,7 @@ import { WebSocket } from 'ws'
 import { SocketDto } from './dto/socket.dto'
 import { UserDto } from './dto/user.dto'
 import { ChatTypeEnum, SocketDataDto, TypeEnum } from './dto/socket-data.dto'
+import { RoomDto } from './dto/room.dto'
 
 const ssPort = 3000
 const wssPort = 3001
@@ -12,7 +13,11 @@ const wssPort = 3001
 
 let sockets: Array<SocketDto> = []
 let users = new Map()
-let rooms = []
+let rooms = new Map()
+rooms.set('room1', {
+  code: 'room1',
+  users: [],
+})
 
 // RawSocket
 const socketServer = net.createServer()
@@ -32,22 +37,35 @@ socketServer.on('connection', (rs) => {
       socket: rs,
     }
     if (data.type == TypeEnum.LOGIN) {
-      if (users.has(data.username)) {
-        const user: UserDto = users.get(data.username)
-        user.sockets.push(thisSocket)
-        users.set(data.username, user)
+      if (!data.chatType || data.chatType == ChatTypeEnum.PERSONAL) {
+        if (users.has(data.username)) {
+          const user: UserDto = users.get(data.username)
+          user.sockets.push(thisSocket)
+          users.set(data.username, user)
+        } else {
+          const user: UserDto = {
+            username: data.username,
+            sockets: [thisSocket],
+          }
+
+          users.set(data.username, user)
+        }
       } else {
         const user: UserDto = {
           username: data.username,
           sockets: [thisSocket],
         }
 
-        users.set(data.username, user)
+        let room1: RoomDto = rooms.get('room1')
+        room1.users.push(user)
+        rooms.set('room1', room1)
       }
     } else if (data.type == TypeEnum.LOGOUT) {
     } else if (data.type == TypeEnum.MESSAGE) {
       if (data.chatType == ChatTypeEnum.PERSONAL) {
         sendMessage(ChatTypeEnum.PERSONAL, data.targetId, data.username, data.data)
+      } else {
+        sendMessage(ChatTypeEnum.ROOM, data.targetId, data.username, data.data)
       }
     } else {
       console.log('😒')
@@ -71,22 +89,35 @@ webSocketServer.on('connection', (ws) => {
       websocket: ws,
     }
     if (data.type == TypeEnum.LOGIN) {
-      if (users.has(data.username)) {
-        const user: UserDto = users.get(data.username)
-        user.sockets.push(thisSocket)
-        users.set(data.username, user)
+      if (!data.chatType || data.chatType == ChatTypeEnum.PERSONAL) {
+        if (users.has(data.username)) {
+          const user: UserDto = users.get(data.username)
+          user.sockets.push(thisSocket)
+          users.set(data.username, user)
+        } else {
+          const user: UserDto = {
+            username: data.username,
+            sockets: [thisSocket],
+          }
+
+          users.set(data.username, user)
+        }
       } else {
         const user: UserDto = {
           username: data.username,
           sockets: [thisSocket],
         }
 
-        users.set(data.username, user)
+        let room1: RoomDto = rooms.get('room1')
+        room1.users.push(user)
+        rooms.set('room1', room1)
       }
     } else if (data.type == TypeEnum.LOGOUT) {
     } else if (data.type == TypeEnum.MESSAGE) {
       if (data.chatType == ChatTypeEnum.PERSONAL) {
         sendMessage(ChatTypeEnum.PERSONAL, data.targetId, data.username, data.data)
+      } else {
+        sendMessage(ChatTypeEnum.ROOM, data.targetId, data.username, data.data)
       }
     } else {
       console.log('😒')
@@ -106,7 +137,8 @@ setInterval(() => {
   // sendTimeBroadcast()
   // console.log(`Sockets size: ${sockets.length}`)
 
-  console.log(`User size: ${users.size}`)
+  const r1 = rooms.get('room1')
+  console.log(`User size: ${users.size} | Room size: ${rooms.size} | User in room1: ${r1.users.length}`)
 }, 1000)
 
 const sendTimeBroadcast = () => {
@@ -134,12 +166,27 @@ const sendMessage = (chatType: string, targetId: string, senderId: string, data:
       const info: UserDto = users.get(targetId)
       info.sockets.forEach((s) => {
         if (s.websocket) {
-          s.websocket.send(`\n${senderId}: ${data}`)
+          s.websocket.send(`\n${ChatTypeEnum.PERSONAL}:: ${senderId}: ${data}`)
         } else {
           if (!s.socket.destroyed) {
-            s.socket.write(`\n${senderId}: ${data}`)
+            s.socket.write(`\n${ChatTypeEnum.PERSONAL}:: ${senderId}: ${data}`)
           }
         }
+      })
+    }
+  } else {
+    if (rooms.has('room1')) {
+      const r1: RoomDto = rooms.get('room1')
+      r1.users.forEach((u) => {
+        u.sockets.forEach((s) => {
+          if (s.websocket) {
+            s.websocket.send(`\n${ChatTypeEnum.ROOM}:: ${senderId}: ${data}`)
+          } else {
+            if (!s.socket.destroyed) {
+              s.socket.write(`\n${ChatTypeEnum.ROOM}:: ${senderId}: ${data}`)
+            }
+          }
+        })
       })
     }
   }

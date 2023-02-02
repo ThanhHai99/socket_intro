@@ -32,3 +32,16 @@ Server có thể kết nối bằng 2 port Socket (raw Socket) và WebSocket
      + 
 
 Client
+
+
+Test data:
+Personal
+Login: {"username": "B", "type": "LOGIN"}
+Message: {"username": "B", "type": "MESSAGE", "targetId":"A",  "chatType":"PERSONAL", "data": "data1"}
+
+Group
+Login: {"username": "B", "type": "LOGIN", "chatType":"ROOM"}
+Message: {"username": "B", "type": "MESSAGE", "targetId":"room1",  "chatType":"ROOM", "data": "data1"}
+
+
+
