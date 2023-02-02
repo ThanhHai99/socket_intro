@@ -47,6 +47,7 @@ webSocketServer.on('close', (ws) => {
 
 setInterval(() => {
   sendTimeBroadcast()
+  console.log(`Sockets size: ${sockets.length}`)
 }, 1000)
 
 const sendTimeBroadcast = () => {
