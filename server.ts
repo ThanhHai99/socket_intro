@@ -65,6 +65,33 @@ webSocketServer.on('connection', (ws) => {
     websocket: ws,
   }
   sockets.push(thisWS)
+  ws.on('message', (dataBuffer) => {
+    const data: SocketDataDto = JSON.parse(dataBuffer.toString())
+    const thisSocket: SocketDto = {
+      websocket: ws,
+    }
+    if (data.type == TypeEnum.LOGIN) {
+      if (users.has(data.username)) {
+        const user: UserDto = users.get(data.username)
+        user.sockets.push(thisSocket)
+        users.set(data.username, user)
+      } else {
+        const user: UserDto = {
+          username: data.username,
+          sockets: [thisSocket],
+        }
+
+        users.set(data.username, user)
+      }
+    } else if (data.type == TypeEnum.LOGOUT) {
+    } else if (data.type == TypeEnum.MESSAGE) {
+      if (data.chatType == ChatTypeEnum.PERSONAL) {
+        sendMessage(ChatTypeEnum.PERSONAL, data.targetId, data.username, data.data)
+      }
+    } else {
+      console.log('😒')
+    }
+  })
 })
 
 webSocketServer.on('close', (ws) => {
@@ -106,8 +133,12 @@ const sendMessage = (chatType: string, targetId: string, senderId: string, data:
     if (users.has(targetId)) {
       const info: UserDto = users.get(targetId)
       info.sockets.forEach((s) => {
-        if (!s.socket.destroyed) {
-          s.socket.write(`\n${senderId}: ${data}`)
+        if (s.websocket) {
+          s.websocket.send(`\n${senderId}: ${data}`)
+        } else {
+          if (!s.socket.destroyed) {
+            s.socket.write(`\n${senderId}: ${data}`)
+          }
         }
       })
     }
