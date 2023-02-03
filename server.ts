@@ -31,6 +31,11 @@ socketServer.on('connection', (rs) => {
   }
   sockets.push(thisRS)
 
+  rs.on('close', () => {
+    const idx = sockets.findIndex((s) => s.socket == rs)
+    if (idx != -1) sockets.splice(idx, 1)
+  })
+
   rs.on('data', (dataBuffer) => {
     const data: SocketDataDto = JSON.parse(dataBuffer.toString())
     const thisSocket: SocketDto = {
@@ -83,6 +88,12 @@ webSocketServer.on('connection', (ws) => {
     websocket: ws,
   }
   sockets.push(thisWS)
+
+  ws.on('close', () => {
+    const idx = sockets.findIndex((s) => s.websocket == ws)
+    if (idx != -1) sockets.splice(idx, 1)
+  })
+
   ws.on('message', (dataBuffer) => {
     const data: SocketDataDto = JSON.parse(dataBuffer.toString())
     const thisSocket: SocketDto = {
@@ -138,7 +149,7 @@ setInterval(() => {
   // console.log(`Sockets size: ${sockets.length}`)
 
   const r1 = rooms.get('room1')
-  console.log(`User size: ${users.size} | Room size: ${rooms.size} | User in room1: ${r1.users.length}`)
+  console.log(`Socket size: ${sockets.length} | User size: ${users.size} | Room size: ${rooms.size} | User in room1: ${r1.users.length}`)
 }, 1000)
 
 const sendTimeBroadcast = () => {
