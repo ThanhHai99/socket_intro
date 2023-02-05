@@ -2,13 +2,13 @@
   "name": "socket_intro",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
-  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "ts-node server.ts",
-    "start": "ts-node server.ts",
-    "client": "ts-node client.ts"
+    "client": "ts-node client.ts",
+    "start": "nodemon server2.js"
   },
   "keywords": [],
   "author": "",
